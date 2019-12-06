@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+  edproxy:
+    image: edswarchitect/goproxy:1.0
+    ports:
+      - "8080:8080"
+    volumes:
+      - /home/edbrown/go/src/github.com/EdSwArchitect/go-docker-play2:/data
+    entrypoint: [ "/opt/playground/ed-proxy" ]
+    networks:
+      - darkstarnet
+    depends_on:
+      - elastic
+#        condition: service_healthy
+  edloader:
+    image: edswarchitect/goloader:1.0
+    ports:
+      - "18080:18080"
+    volumes:
+      - /home/edbrown/go/src/github.com/EdSwArchitect/go-docker-compose-play/test:/data
+    entrypoint: [ "/opt/playground/ed-loader" ]
+    networks:
+      - darkstarnet
+    depends_on:
+      - elastic
+#        condition: service_healthy
+  edquery:
+    image: edswarchitect/goquery:1.0
+    ports:
+      - "19090:19090"
+    volumes:
+      - /home/edbrown/go/src/github.com/EdSwArchitect/go-docker-compose-play/test:/data
+    entrypoint: [ "/opt/playground/ed-query", "-host", "http://es01:9200" ]
+    networks:
+      - darkstarnet
+    depends_on:
+      - elastic
+#        condition: service_healthy
+  elastic:
+      image: docker.elastic.co/elasticsearch/elasticsearch:7.3.1
+      container_name: es01
+      environment:
+        - discovery.type=single-node
+        - node.name=es01
+        - bootstrap.memory_lock=true
+        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      ports:
+        - 9200:9200
+        - 9300:9300
+      networks:
+        - darkstarnet
+      healthcheck:
+        test: ["CMD", "curl", "http://es01:9200/"]
+        interval: 5s
+        timeout: 10s
+        retries: 5
+
+
+networks:
+  darkstarnet:
+    driver: bridge
+

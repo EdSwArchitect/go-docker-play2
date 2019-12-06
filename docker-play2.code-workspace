@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "/home/edbrown/go/src/github.com/EdSwArchitect/go-docker-compose-play/loader"
+		},
+		{
+			"path": "/home/edbrown/go/src/github.com/EdSwArchitect/go-docker-compose-play/service"
+		}
+	],
+	"settings": {}
+}
