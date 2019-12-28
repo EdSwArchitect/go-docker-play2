@@ -39,8 +39,9 @@ var futureDate int64 = 0
 var futureURL string = ""
 var countryMap map[string]int = make(map[string]int)
 var wg sync.WaitGroup
+var ticker *time.Ticker
 
-func handleJSON(jsonStr <-chan string) {
+func handleJSON(jsonStr <-chan string, doneChan <-chan bool) {
 	for {
 		select {
 		case msg := <-jsonStr:
@@ -72,6 +73,12 @@ func handleJSON(jsonStr <-chan string) {
 			eventList = append(eventList, res)
 			wg.Done()
 
+		case <-doneChan:
+			fmt.Println("Done channel")
+			break
+		case t := <-ticker.C:
+			fmt.Printf("Tick at %+v\n", t)
+			break
 		case <-time.After(1 * time.Minute):
 			fmt.Println("Timeout")
 		}
@@ -102,8 +109,12 @@ func main() {
 
 	jsonChannel := make(chan string)
 
+	ticker = time.NewTicker(120 * time.Second)
+
+	doneChannel := make(chan bool)
+
 	// thread for handling json
-	go handleJSON(jsonChannel)
+	go handleJSON(jsonChannel, doneChannel)
 
 	timeout := time.Duration(10 * time.Second)
 
@@ -143,10 +154,10 @@ func main() {
 
 		if n == 0 {
 			counter++
-			if counter >= 20 {
-				fmt.Println("Time to exit")
-				break
-			}
+			// if counter >= 10000 {
+			// 	fmt.Println("Time to exit")
+			// 	break
+			// }
 		} else {
 			str := string(buffer[:n])
 
@@ -160,6 +171,7 @@ func main() {
 		}
 	}
 	defer close(jsonChannel)
+	ticker.Stop()
 
 	wg.Wait()
 
